@@ -16,3 +16,27 @@ function easeMe() {
   }
   });
 }
+
+const app = document.querySelector('#app');
+const nav = document.querySelector('nav a');
+
+nav.addEventListener('click', () => {
+  toggleActive(nav);
+  toggleAppDisplay();
+})
+
+app.addEventListener('click', () => {
+  if (app.className !== 'active') {
+    toggleAppDisplay();
+  }
+})
+
+function toggleActive(element) {
+  element.classList.toggle('active');
+}
+
+function toggleAppDisplay() {
+  if (window.matchMedia('(min-width: 768px)')) {
+    toggleActive(app);
+  }
+}
