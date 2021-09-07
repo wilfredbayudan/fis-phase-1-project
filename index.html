@@ -12,8 +12,8 @@
 
     <header>
       <nav>
-        <a href="#">SEARCH</a>
-        <a href="#">BUCKETLIST</a>
+        <a href="#" id="search-link">SEARCH</a>
+        <a href="#" id="bucketlist-link">BUCKETLIST</a>
       </nav>
       <img src="./images/logo_white.png" alt="iWander" id="logo" />
     </header>
@@ -21,57 +21,22 @@
     <main>
       <div id="map"></div>
       <div id="app">
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
 
-        <button onclick="easeMe()">TO PARIS!</button><br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
-        App Content<br />
+        <section id="search-container">
+          <form id="search-form">
+            <h2>SEARCH FOR A COUNTRY</h2>
+            <input id="search-input" type="text" name="search-input" placeholder="Seek the world">
+            <div id="search-type-container">
+              <span>Search by</span> 
+              <select id="search-type" name="search-type">
+                <option value="name" selected>Country Name</option>
+                <option value="capital">Country Capital</option>
+              </select>
+            </div>
+          </form> 
+        </section>
+
+
         
       </div>
     </main>
