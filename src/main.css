@@ -32,6 +32,15 @@ main {
   padding: 8px;
   box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+#app .app-heading {
+  flex-shrink: 0;
+}
+#app .app-content {
+  flex: 1;
+  overflow: scroll;
 }
 header {
   padding: 10px;
@@ -50,7 +59,7 @@ nav {
 nav a { 
   color: #cacaca; 
   transition-property: color; 
-  transition-duration: 500ms; 
+  transition-duration: 300ms; 
   transition-timing-function: ease; 
   text-decoration: none;
   margin-left: 10px;
@@ -104,6 +113,35 @@ footer {
     margin-left: 20px;
   }
 }
+/* Modal */
+#modal {
+  position: fixed;
+  top: -50%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: -1;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.90);
+  padding: 15px;
+  border-radius: 4px;
+  box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+#modal.active {
+  z-index: 4;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+#modal h3 {
+  border-bottom: 1px solid #cacaca;
+  padding: 10px;
+  margin: 0;
+}
+#modal p {
+}
+
 /* Search Form Styling */
 #search-container {
   border-bottom: 1px solid #cacaca;
@@ -116,12 +154,91 @@ footer {
   border: 1px solid #cacaca;
   font-size: 1.1em;
 }
-#search-form select {
+#search-form select, #search-select {
   border-radius: 4px;
   border: 1px solid #cacaca;
   padding: 5px;
   color: #333333;
 }
+#search-select {
+  font-size: 1.1em;
+  width: 100%;
+  display: none;;
+}
 #search-type-container {
   margin-top: 10px;
+}
+#all-btn {
+  float: right;
+}
+button {
+  border-radius: 4px;
+  background-color: #858585;
+  border: none;
+  cursor: pointer;
+  padding: 7px;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+.blue-btn {
+  background-color: #4bb5e6;
+}
+.blue-btn:hover {
+  background-color: #69c8f5;
+}
+.green-btn {
+  background-color: #61d67b;
+}
+.green-btn:hover {
+  background-color: #72f38e;
+}
+.red-btn {
+  background-color: #c42a2a;
+  color: #ffffff;
+}
+.red-btn:hover {
+  background-color: #db3535;
+}
+.app-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 3px;
+}
+.app-content li {
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+  padding: 10px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+.app-content li:hover {
+  background-color: #d9fff4;
+}
+.app-content li h4 {
+  margin: 0;
+  padding: 0;
+}
+.app-content li p {
+  margin: 0;
+  padding: 0;
+  font-size: 0.9em;
+  color: #858585;
+}
+.app-content .country-info {
+  flex: 1;
+  margin-left: 10px;
+}
+.app-content .country-options {
+  display: flex;
+  flex-direction: column;
+}
+.app-content .country-options button {
+  margin: 3px;
+  font-size: 0.8em;
+}
+#bucketlist-page {
+  display: none;
 }

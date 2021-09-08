@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="./src/main.css" />
   </head>
   <body>
-
     <header>
       <nav>
         <a href="#" id="search-link">SEARCH</a>
@@ -22,20 +21,47 @@
       <div id="map"></div>
       <div id="app">
 
-        <section id="search-container">
-          <form id="search-form">
-            <h2>SEARCH FOR A COUNTRY</h2>
-            <input id="search-input" type="text" name="search-input" placeholder="Seek the world">
-            <div id="search-type-container">
-              <span>Search by</span> 
-              <select id="search-type" name="search-type">
-                <option value="name" selected>Country Name</option>
-                <option value="capital">Country Capital</option>
-              </select>
-            </div>
-          </form> 
+        <section id="search-page">
+
+          <div class="app-heading" id="search-container">
+            <form id="search-form">
+              <h2>SEARCH FOR A COUNTRY</h2>
+              <div id="search-input-container">
+                <select id="search-select" name="search-input">
+                  <option selected value="">Select a Region</option>
+                  <option value="africa">Africa</option>
+                  <option value="americas">Americas</option>
+                  <option value="Asia">Asia</option>
+                  <option value="Europe">Europe</option>
+                  <option value="oceania">Oceania</option>
+                </select>
+                <input id="search-input" type="text" name="search-input" placeholder="Seek the world">
+              </div>
+              <div id="search-type-container">
+                <span>Search by</span> 
+                <select id="search-type" name="search-type">
+                  <option value="name" selected>Country Name</option>
+                  <option value="capital">Country Capital</option>
+                  <option value="region">Region</option>
+                </select>
+                <button type="button" id="all-btn" class="blue-btn">SHOW ALL</button>
+              </div>
+            </form> 
+          </div>
+  
+          <div class="app-content" id="results-container">
+          </div>
+
         </section>
 
+        <section id="bucketlist-page">
+
+          <div class="app-heading" id="search-container">
+            <h2>YOUR BUCKETLIST</h2>
+            Test
+          </div>
+
+        </section>
 
         
       </div>
@@ -46,6 +72,5 @@
     </footer>
 
     <script src="./src/main.js"></script>
-
   </body>
 </html>
