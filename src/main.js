@@ -60,6 +60,7 @@ const resultsContainer = document.querySelector('#results-container');
 let searchResults = [];
 let userBucketlist = [];
 let currentLink = searchLink;
+let currentPage = searchContainer;
 
 // Nav
 searchLink.addEventListener('click', () => {
@@ -67,6 +68,7 @@ searchLink.addEventListener('click', () => {
   resultsContainer.style.display = 'block';
   bucketlistHeader.style.display = 'none';
   bucketlistContainer.style.display = 'none';
+  renderResults(searchResults);
 })
 bucketlistLink.addEventListener('click', () => {
   showPage(bucketlistHeader, bucketlistLink);
@@ -76,7 +78,7 @@ bucketlistLink.addEventListener('click', () => {
   renderResults(userBucketlist.map(country => country.data), bucketlistContainer, true)
 })
 
-function showPage(pageElem, link) {
+function showPage(pageElem = searchContainer, link = searchLink) {
   nav.querySelectorAll('a').forEach(link => link.classList.remove('active'));
   if (pageElem.style.display !== 'none' && app.classList.contains('active')) {
     toggleAppDisplay();
@@ -279,7 +281,6 @@ function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 
 }
 
 function renderResults(res, destination = resultsContainer, isBucketlist = false) {
-
   if (typeof res === 'object') {
     destination.textContent = '';
     const ul = document.createElement('ul');
@@ -322,12 +323,13 @@ function renderBucketButton(country, destination, isBucketlist = false) {
     e.stopPropagation();
     if (Bucketlist.find(country.alpha3Code)) {
       Bucketlist.remove(country.alpha3Code);
+      e.srcElement.parentElement.parentElement.className = isBucketlist ? 'deleting' : '';
       showModal('Success!', `${country.name} has been removed from your bucketlist.`);
     } else {
       Bucketlist.add(country)
       showModal('Success!', `${country.name} has been added to your bucketlist.`);
     }
-    renderResults((isBucketlist ? userBucketlist.map(countries => countries.data) : searchResults), destination, isBucketlist);
+    setTimeout(() => renderResults((isBucketlist ? userBucketlist.map(countries => countries.data) : searchResults), destination, isBucketlist), isBucketlist ? 800 : 0)
   })
   return toBucketlistBtn;
 }

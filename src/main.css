@@ -21,7 +21,7 @@ main {
   min-height: 0;
 }
 #map {
-  min-height: 50%;
+  min-height: 35%;
   width: 100%;
   z-index: 0;
 }
@@ -92,7 +92,6 @@ header, footer {
 }
 #bucket-count.active {
   background-color: #aaeed7;
-  font-weight: bold;
   color: #ffffff;
 }
 footer {
@@ -275,6 +274,17 @@ button {
   align-items: center;
   background-color: #f1f1f1;
   cursor: pointer;
+  transition-duration: 800ms;
+  transition-timing-function: ease;
+  opacity: 100%;
+  z-index: 3;
+}
+.app-content li.deleting {
+  opacity: 0;
+  margin-top: -20px;
+  z-index: -1;
+  height: 1px;
+  overflow: hidden;
 }
 .app-content li:hover {
   background-color: #d9fff4;
@@ -303,4 +313,11 @@ button {
 }
 #app .hidden {
   display: none;
+}
+footer a {
+  color: #ffffff;
+  text-decoration: none;
+}
+footer a:hover {
+  color: #0ed499;
 }
