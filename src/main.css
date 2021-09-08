@@ -79,13 +79,21 @@ header, footer {
   z-index: 2;
 }
 #bucket-count {
-  background-color: aquamarine;
+  background-color: #39dfa7;
   border-radius: 3px;
   padding: 2px 3px;
   position: relative;
   top: -6px;
   left: 3px;
   font-size: 0.9em;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+  color: #000000;
+}
+#bucket-count.active {
+  background-color: #aaeed7;
+  font-weight: bold;
+  color: #ffffff;
 }
 footer {
   padding: 8px;
@@ -197,7 +205,7 @@ footer {
 }
 
 /* Search Form Styling */
-#search-container {
+#search-container, #bucketlist-header {
   border-bottom: 1px solid #cacaca;
   padding-bottom: 15px;
 }

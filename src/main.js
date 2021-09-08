@@ -7,8 +7,6 @@ center: [39, 34],
 style: 'mapbox://styles/mapbox/streets-v11'
 });
 
-
-
 function mapTo(country) {
   if (typeof country.latlng === 'object') {
     // USA LATLONG
@@ -33,6 +31,7 @@ function mapTo(country) {
     <h2>${country.name}</h2>
     <h3>${country.nativeName}</h3>
     <span>${country.subregion}</span>
+    <p><b>Capital:</b> ${country.capital}</p>
     <p><b>Population:</b> ${country.population}</p>
     `)
     .addTo(map);
@@ -74,6 +73,7 @@ bucketlistLink.addEventListener('click', () => {
   bucketlistContainer.style.display = 'block';
   searchContainer.style.display = 'none';
   resultsContainer.style.display = 'none';
+  renderResults(userBucketlist.map(country => country.data), bucketlistContainer, true)
 })
 
 function showPage(pageElem, link) {
@@ -232,7 +232,10 @@ class Bucketlist {
 
   static refreshCount() {
     const bucketlistSize = userBucketlist.length;
-    document.querySelector('#bucket-count').textContent = bucketlistSize;
+    const countCountainer = document.querySelector('#bucket-count');
+    countCountainer.textContent = bucketlistSize;
+    countCountainer.className = 'active';
+    setTimeout(() => countCountainer.className = '', 300)
   }
 }
 // Render 
@@ -261,8 +264,10 @@ function renderModal() {
   body.appendChild(div);
 }
 
+let modalTimer = null;
 function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 'info') {
   killLoader();
+  clearTimeout(modalTimer); 
   const modal = document.querySelector('#modal');
   const h3 = document.querySelector('#modal h3');
   const p = document.querySelector('#modal p');
@@ -270,12 +275,13 @@ function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 
   h3.textContent = heading;
   p.textContent = message;
   modal.className = 'active';
-  setTimeout(() => modal.className = '', 2500)
+  modalTimer = setTimeout(() => modal.className = '', 2500)
 }
 
-function renderResults(res) {
+function renderResults(res, destination = resultsContainer, isBucketlist = false) {
+
   if (typeof res === 'object') {
-    resultsContainer.textContent = '';
+    destination.textContent = '';
     const ul = document.createElement('ul');
     res.forEach(country => {
       const li = document.createElement('li');
@@ -295,18 +301,18 @@ function renderResults(res) {
       li.appendChild(infoDiv);
       const countryOptions = document.createElement('div');
       countryOptions.className = 'country-options';
-      countryOptions.appendChild(renderBucketButton(country));
+      countryOptions.appendChild(renderBucketButton(country, destination, isBucketlist));
       li.appendChild(countryOptions);
       ul.appendChild(li);
       li.addEventListener('click', () => {
         mapTo(country);
       });
     })
-    resultsContainer.appendChild(ul);
+    destination.appendChild(ul);
   }
 }
 
-function renderBucketButton(country) {
+function renderBucketButton(country, destination, isBucketlist = false) {
   const res = Bucketlist.find(country.alpha3Code);
   console.log(res);
   const toBucketlistBtn = document.createElement('button');
@@ -321,7 +327,7 @@ function renderBucketButton(country) {
       Bucketlist.add(country)
       showModal('Success!', `${country.name} has been added to your bucketlist.`);
     }
-    renderResults(searchResults);
+    renderResults((isBucketlist ? userBucketlist.map(countries => countries.data) : searchResults), destination, isBucketlist);
   })
   return toBucketlistBtn;
 }
@@ -329,6 +335,5 @@ function renderBucketButton(country) {
 document.addEventListener('DOMContentLoaded', () => {
   // Initial Modal Render
   renderModal();
-
 
 })
