@@ -38,6 +38,9 @@ function mapTo(country) {
   
   }
 }
+
+
+
 // Selectors and intial values
 
 const body = document.querySelector('body');
@@ -195,6 +198,39 @@ async function fetchResults(showAll = false) {
   return 'No user input';
 }
 
+// More Mapstuff
+function geoJson(bucketlist) {
+  return {
+    type: 'Feature Collection',
+    features: bucketlist.map(country => {
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: country.lnglat
+        },
+        properties: {
+          title: country.data.name,
+          description: country.data.subregion
+        }
+      }
+    })
+  }
+}
+
+function renderMarkers(geojson) {
+  document.querySelectorAll('.marker').forEach(marker => marker.remove());
+  // add markers to map
+  for (const { geometry, properties } of geojson.features) {
+    // create a HTML element for each feature
+    const el = document.createElement('div');
+    el.className = 'marker';
+
+    // make a marker for each feature and add to the map
+    new mapboxgl.Marker(el).setLngLat(geometry.coordinates).addTo(map);
+  }
+}
+
 // Bucketlist
 class BucketlistCountry {
   constructor(id, data, rating, notes) {
@@ -203,6 +239,10 @@ class BucketlistCountry {
     this.rating = rating;
     this.notes = notes;
     this.added = Date.now();
+  }
+
+  get lnglat() {
+    return [this.data.latlng[1], this.data.latlng[0]];
   }
 }
 class Bucketlist {
@@ -216,6 +256,7 @@ class Bucketlist {
       const Country = new BucketlistCountry(country.alpha3Code, country, 0, '');
       userBucketlist.push(Country);
       this.refreshCount();
+      renderMarkers(geoJson(userBucketlist));
       return Country;
     } else {
       console.log('Already in the bucketlist, oops.')
@@ -228,6 +269,7 @@ class Bucketlist {
       res = userBucketlist.filter(country => country.id !== countryCode);
       userBucketlist = res;
       this.refreshCount();
+      renderMarkers(geoJson(userBucketlist));
       return res;
     }
   }
@@ -315,7 +357,6 @@ function renderResults(res, destination = resultsContainer, isBucketlist = false
 
 function renderBucketButton(country, destination, isBucketlist = false) {
   const res = Bucketlist.find(country.alpha3Code);
-  console.log(res);
   const toBucketlistBtn = document.createElement('button');
   toBucketlistBtn.className = res ? 'red-btn' : 'green-btn';
   toBucketlistBtn.textContent = res ? 'REMOVE' : '+ADD';
