@@ -7,15 +7,17 @@ center: [39, 34],
 style: 'mapbox://styles/mapbox/streets-v11'
 });
 
-function mapEaseTo(latlng) {
-  console.log(latlng);
-  if (typeof latlng === 'object') {
+
+
+function mapTo(country) {
+  if (typeof country.latlng === 'object') {
     // USA LATLONG
-    if (latlng.length === 0) {
-      latlng = [39.50, -98.35];
+    let lnglat = country.latlng;
+    if (country.latlng.length === 0) {
+      lnglat = [39.50, -98.35];
     }
     map.easeTo({
-      center: [latlng[1], latlng[0]],
+      center: [lnglat[1], lnglat[0]],
       zoom: 4,
       speed: 0.3,
       curve: 1,
@@ -24,6 +26,17 @@ function mapEaseTo(latlng) {
       return t;
       }
       });
+ 
+    const popup = new mapboxgl.Popup({ closeOnClick: true })
+    .setLngLat([lnglat[1], lnglat[0]])
+    .setHTML(`
+    <h2>${country.name}</h2>
+    <h3>${country.nativeName}</h3>
+    <span>${country.subregion}</span>
+    <p><b>Population:</b> ${country.population}</p>
+    `)
+    .addTo(map);
+  
   }
 }
 // Selectors and intial values
@@ -32,8 +45,11 @@ const body = document.querySelector('body');
 const app = document.querySelector('#app');
 const searchLink = document.querySelector('#search-link');
 const bucketlistLink = document.querySelector('#bucketlist-link');
-const searchPage = document.querySelector('#search-page');
-const bucketlistPage = document.querySelector('#bucketlist-page');
+
+const searchContainer = document.querySelector('#search-container');
+const bucketlistHeader = document.querySelector('#bucketlist-header');
+const bucketlistContainer = document.querySelector('#bucketlist-container');
+
 const nav = document.querySelector('nav');
 const searchSelect = document.querySelector('#search-select');
 const searchInput = document.querySelector('#search-input');
@@ -43,15 +59,21 @@ const showAll = document.querySelector('#all-btn');
 const resultsContainer = document.querySelector('#results-container');
 
 let searchResults = [];
-let currentPage = searchPage;
+let userBucketlist = [];
 let currentLink = searchLink;
 
 // Nav
 searchLink.addEventListener('click', () => {
-  showPage(searchPage, searchLink);
+  showPage(searchContainer, searchLink);
+  resultsContainer.style.display = 'block';
+  bucketlistHeader.style.display = 'none';
+  bucketlistContainer.style.display = 'none';
 })
 bucketlistLink.addEventListener('click', () => {
-  showPage(bucketlistPage, bucketlistLink);
+  showPage(bucketlistHeader, bucketlistLink);
+  bucketlistContainer.style.display = 'block';
+  searchContainer.style.display = 'none';
+  resultsContainer.style.display = 'none';
 })
 
 function showPage(pageElem, link) {
@@ -100,11 +122,15 @@ searchForm.addEventListener('submit', e => {
     .then(res => {
       if (res) {
         renderResults(res);
-        mapEaseTo(res[0].latlng);
+        mapTo(res[0]);
       }
     })
     .catch(err => console.log(err));
-  searchForm.reset();
+  searchInput.value = '';
+  setTimeout(() => {
+    searchInput.focus();
+    searchInput.select();
+  }, 100)
 })
 
 let timerID = null;
@@ -117,7 +143,6 @@ searchInput.addEventListener('keyup', () => {
 
 searchSelect.addEventListener('change', () => {
   if (searchSelect.value) {
-    console.log(searchSelect.value);
     fetchResults()
       .then(res => renderResults(res))
       .catch(err => console.log(err));
@@ -135,12 +160,23 @@ searchType.addEventListener('change', () => {
 })
 
 // API
-
-async function fetchResults(showAll) {
+function isEmpty(str) {
+  if (str.replace(/^\s+|\s+$/gm,'').length === 0) {
+    return true;
+  }
+}
+async function fetchResults(showAll = false) {
+  let searchValue = searchType.value === 'region' ? searchSelect.value : searchInput.value.trim();
+  if (searchType.value === 'name' || searchType.value === 'capital') {
+    if (isEmpty(searchValue) && showAll === false) {
+      showModal('Tisk Tisk', 'Are you searching for invisible countries? 🤨')
+      return;
+    }
+  }
   if (searchInput.value || showAll === true || searchSelect.value) {
-    const searchValue = searchType.value === 'region' ? searchSelect.value : searchInput.value;
     const url = `https://restcountries.eu/rest/v2/${showAll === true ? 'all' : searchType.value + '/' + searchValue}`;
 
+    renderLoader();
     return fetch(url)
       .then(res => res.json())
       .then(json => {
@@ -148,15 +184,73 @@ async function fetchResults(showAll) {
           showModal('Oops!', `We couldn't find any countries with that name.`)
         } else {
           searchResults = json;
+          killLoader();
           return (json);
         }
       })
-      .catch(err => console.log(err.message));
+      .catch(err => showModal('Error', err.message));
   }
   return 'No user input';
 }
 
+// Bucketlist
+class BucketlistCountry {
+  constructor(id, data, rating, notes) {
+    this.id = id;
+    this.data = data;
+    this.rating = rating;
+    this.notes = notes;
+    this.added = Date.now();
+  }
+}
+class Bucketlist {
+  static find = countryCode => {
+    return userBucketlist.find(bucketlistCountry => bucketlistCountry.id === countryCode)
+  }
+
+  static add = country => {
+    if (!this.find(country.alpha3Code)) {
+      console.log(`Adding ${country.alpha3Code} to Bucketlist`);
+      const Country = new BucketlistCountry(country.alpha3Code, country, 0, '');
+      userBucketlist.push(Country);
+      this.refreshCount();
+      return Country;
+    } else {
+      console.log('Already in the bucketlist, oops.')
+    }
+  }
+
+  static remove = countryCode => {
+    if (this.find(countryCode)) {
+      let res = [];
+      res = userBucketlist.filter(country => country.id !== countryCode);
+      userBucketlist = res;
+      this.refreshCount();
+      return res;
+    }
+  }
+
+  static refreshCount() {
+    const bucketlistSize = userBucketlist.length;
+    document.querySelector('#bucket-count').textContent = bucketlistSize;
+  }
+}
 // Render 
+function renderLoader() {
+  divLoader = document.createElement('div');
+  divLoader.id = 'loader';
+  divSpinner = document.createElement('div');
+  divSpinner.className = 'spinner';
+  divLoader.appendChild(divSpinner);
+  body.appendChild(divLoader);
+}
+
+function killLoader() {
+  if (document.querySelectorAll('#loader').length > 0) {
+    setTimeout(() => document.querySelector('#loader').remove(), 300);
+  }
+}
+
 function renderModal() {
   const div = document.createElement('div');
   const h3 = document.createElement('h3');
@@ -168,6 +262,7 @@ function renderModal() {
 }
 
 function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 'info') {
+  killLoader();
   const modal = document.querySelector('#modal');
   const h3 = document.querySelector('#modal h3');
   const p = document.querySelector('#modal p');
@@ -194,26 +289,41 @@ function renderResults(res) {
       const h4 = document.createElement('h4');
       h4.textContent = country.name;
       const p = document.createElement('p');
-      p.textContent = country.subregion;
+      p.textContent = country.region;
       infoDiv.appendChild(h4);
       infoDiv.appendChild(p);
       li.appendChild(infoDiv);
       const countryOptions = document.createElement('div');
       countryOptions.className = 'country-options';
-      const toBucketlistBtn = document.createElement('button');
-      toBucketlistBtn.className = 'green-btn';
-      toBucketlistBtn.textContent = '+ADD';
-      toBucketlistBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        console.log(`Clicked ${country.cioc}`)
-      })
-      countryOptions.appendChild(toBucketlistBtn);
+      countryOptions.appendChild(renderBucketButton(country));
       li.appendChild(countryOptions);
       ul.appendChild(li);
-      li.addEventListener('click', () => mapEaseTo(country.latlng));
+      li.addEventListener('click', () => {
+        mapTo(country);
+      });
     })
     resultsContainer.appendChild(ul);
   }
+}
+
+function renderBucketButton(country) {
+  const res = Bucketlist.find(country.alpha3Code);
+  console.log(res);
+  const toBucketlistBtn = document.createElement('button');
+  toBucketlistBtn.className = res ? 'red-btn' : 'green-btn';
+  toBucketlistBtn.textContent = res ? 'REMOVE' : '+ADD';
+  toBucketlistBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (Bucketlist.find(country.alpha3Code)) {
+      Bucketlist.remove(country.alpha3Code);
+      showModal('Success!', `${country.name} has been removed from your bucketlist.`);
+    } else {
+      Bucketlist.add(country)
+      showModal('Success!', `${country.name} has been added to your bucketlist.`);
+    }
+    renderResults(searchResults);
+  })
+  return toBucketlistBtn;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
