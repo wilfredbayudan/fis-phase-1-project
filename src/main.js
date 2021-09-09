@@ -141,8 +141,8 @@ searchForm.addEventListener('submit', e => {
 })
 
 let timerID = null;
-searchInput.addEventListener('keyup', () => {
-  if (searchInput.value) {
+searchInput.addEventListener('keyup', e => {
+  if (e.key !== 'Backspace' && searchInput.value) {
     clearTimeout(timerID);
     timerID = setTimeout(() => fetchResults().then(res => renderResults(res)), 500);
   }
