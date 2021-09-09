@@ -24,6 +24,8 @@ function mapTo(country) {
       return t;
       }
       });
+
+    document.querySelectorAll('.mapboxgl-popup-content').forEach(elem => elem.remove());
  
     const popup = new mapboxgl.Popup({ closeOnClick: true })
     .setLngLat([lnglat[1], lnglat[0]])
@@ -148,7 +150,7 @@ searchForm.addEventListener('submit', e => {
 
 let timerID = null;
 searchInput.addEventListener('keyup', e => {
-  if (e.key !== 'Backspace' && searchInput.value) {
+  if (searchInput.value.length > 1 && e.key !== 'Backspace') {
     clearTimeout(timerID);
     timerID = setTimeout(() => fetchResults().then(res => { 
       mapTo(res[0]);
@@ -529,7 +531,8 @@ function renderBucketButton(country, destination, isBucketlist = false) {
       e.srcElement.parentElement.parentElement.parentElement.className = isBucketlist ? 'deleting' : '';
       showModal('Success!', `${country.name} has been removed from your bucketlist.`);
     } else {
-      Bucketlist.add(country)
+      Bucketlist.add(country);
+      searchInput.focus();
       showModal('Success!', `${country.name} has been added to your bucketlist.`);
     }
     setTimeout(() => renderResults((isBucketlist ? userBucketlist: searchResults), destination, isBucketlist), isBucketlist ? 500 : 0)
