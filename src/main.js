@@ -73,7 +73,6 @@ searchLink.addEventListener('click', () => {
   resultsContainer.style.display = 'block';
   bucketlistHeader.style.display = 'none';
   bucketlistContainer.style.display = 'none';
-  setTimeout(() => searchInput.focus(), 500)
   renderResults(searchResults);
 })
 bucketlistLink.addEventListener('click', () => {
@@ -86,6 +85,9 @@ bucketlistLink.addEventListener('click', () => {
 
 function showPage(pageElem = searchContainer, link = searchLink) {
   nav.querySelectorAll('a').forEach(link => link.classList.remove('active'));
+  if (currentPage !== searchContainer && app.classList.contains('active')) {
+    setTimeout(() => searchInput.focus(), 50)
+  }
   if (pageElem.style.display !== 'none' && app.classList.contains('active')) {
     toggleAppDisplay();
   } else {
@@ -93,6 +95,9 @@ function showPage(pageElem = searchContainer, link = searchLink) {
     pageElem.style.display = 'block';
     link.classList.add('active');
     if (!app.classList.contains('active')) {
+      if (pageElem === searchContainer) {
+        setTimeout(() => searchInput.focus(), 500)
+      }
       toggleAppDisplay();
       link.classList.add('active');
     }
