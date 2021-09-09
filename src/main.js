@@ -73,6 +73,7 @@ searchLink.addEventListener('click', () => {
   resultsContainer.style.display = 'block';
   bucketlistHeader.style.display = 'none';
   bucketlistContainer.style.display = 'none';
+  setTimeout(() => searchInput.focus(), 500)
   renderResults(searchResults);
 })
 bucketlistLink.addEventListener('click', () => {
@@ -145,8 +146,9 @@ searchInput.addEventListener('keyup', e => {
   if (e.key !== 'Backspace' && searchInput.value) {
     clearTimeout(timerID);
     timerID = setTimeout(() => fetchResults().then(res => { 
-      renderResults(res);
       mapTo(res[0]);
+      renderResults(res);
+      searchInput.focus();
     }), 500);
   }
 })
