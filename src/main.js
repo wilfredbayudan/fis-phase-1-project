@@ -64,6 +64,7 @@ let searchResults = [];
 let userBucketlist = [];
 let currentLink = searchLink;
 let currentPage = searchContainer;
+let currentFilter = null;
 
 // Nav
 searchLink.addEventListener('click', () => {
@@ -78,7 +79,7 @@ bucketlistLink.addEventListener('click', () => {
   bucketlistContainer.style.display = 'block';
   searchContainer.style.display = 'none';
   resultsContainer.style.display = 'none';
-  renderResults(userBucketlist.map(country => country.data), bucketlistContainer, true)
+  renderResults(userBucketlist.map(country => country._data), bucketlistContainer, true)
 })
 
 function showPage(pageElem = searchContainer, link = searchLink) {
@@ -210,8 +211,8 @@ function geoJson(bucketlist) {
           coordinates: country.lnglat
         },
         properties: {
-          title: country.data.name,
-          description: country.data.subregion
+          title: country._data.name,
+          description: country._data.subregion
         }
       }
     })
@@ -233,27 +234,37 @@ function renderMarkers(geojson) {
 
 // Bucketlist
 class BucketlistCountry {
-  constructor(id, data, rating, notes) {
-    this.id = id;
-    this.data = data;
-    this.rating = rating;
-    this.notes = notes;
-    this.added = Date.now();
+  constructor(id, data) {
+    this._id = id;
+    this._data = data;
+    this._rating = 0;
+    this._notes = '';
+    this._added = Date.now();
   }
 
   get lnglat() {
-    return [this.data.latlng[1], this.data.latlng[0]];
+    return [this._data.latlng[1], this._data.latlng[0]];
   }
+
+  get rating() {
+    return this._rating;
+  }
+
+  setRating(newRating) {
+    this._rating = newRating;
+  }
+
+  
 }
 class Bucketlist {
   static find = countryCode => {
-    return userBucketlist.find(bucketlistCountry => bucketlistCountry.id === countryCode)
+    return userBucketlist.find(bucketlistCountry => bucketlistCountry._id === countryCode)
   }
 
   static add = country => {
     if (!this.find(country.alpha3Code)) {
       console.log(`Adding ${country.alpha3Code} to Bucketlist`);
-      const Country = new BucketlistCountry(country.alpha3Code, country, 0, '');
+      const Country = new BucketlistCountry(country.alpha3Code, country);
       userBucketlist.push(Country);
       this.refreshCount();
       renderMarkers(geoJson(userBucketlist));
@@ -266,7 +277,7 @@ class Bucketlist {
   static remove = countryCode => {
     if (this.find(countryCode)) {
       let res = [];
-      res = userBucketlist.filter(country => country.id !== countryCode);
+      res = userBucketlist.filter(country => country._id !== countryCode);
       userBucketlist = res;
       this.refreshCount();
       renderMarkers(geoJson(userBucketlist));
@@ -321,18 +332,50 @@ function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 
   modal.className = 'active';
   modalTimer = setTimeout(() => modal.className = '', 2500)
 }
+function renderRating(countryCode) {
+  const country = Bucketlist.find(countryCode);
+  const maxRating = 5;
+  const ratingContainer = document.createElement('div');
+  console.log(country.rating);
+  for (let i = 1; i <= maxRating; i++) {
+    const star = document.createElement('span');
+    star.classList.add('fa','fa-star');
+    if (i <= country.rating) {
+      console.log(`${i} is less than or equal to ${country.rating}`)
+      star.classList.add('checked');
+    }
+    star.addEventListener('click', () => {
+      country.setRating(i);
+      renderResults(userBucketlist.map(country => country._data), bucketlistContainer, true)
+    })
+    ratingContainer.appendChild(star);
+  }
+  return ratingContainer;
+}
 
+function renderBucketlistDetails(countryCode) {
+  const bucketlistDetails = Bucketlist.find(countryCode);
+  if (bucketlistDetails) {
+    const divContainer = document.createElement('div');
+    divContainer.className = 'bucketlist-details';
+    divContainer.appendChild(renderRating(countryCode));
+  
+    return divContainer;
+  }
+}
 function renderResults(res, destination = resultsContainer, isBucketlist = false) {
   if (typeof res === 'object') {
     destination.textContent = '';
     const ul = document.createElement('ul');
     res.forEach(country => {
       const li = document.createElement('li');
+      const overviewDiv = document.createElement('div');
+      overviewDiv.className = 'country-overview';
       const img = document.createElement('img');
       img.src = country.flag;
       img.alt = country.cioc;
       img.width = 60;
-      li.appendChild(img);
+      overviewDiv.appendChild(img);
       const infoDiv = document.createElement('div');
       infoDiv.className = 'country-info';
       const h4 = document.createElement('h4');
@@ -341,13 +384,17 @@ function renderResults(res, destination = resultsContainer, isBucketlist = false
       p.textContent = country.region;
       infoDiv.appendChild(h4);
       infoDiv.appendChild(p);
-      li.appendChild(infoDiv);
+      overviewDiv.appendChild(infoDiv);
       const countryOptions = document.createElement('div');
       countryOptions.className = 'country-options';
       countryOptions.appendChild(renderBucketButton(country, destination, isBucketlist));
-      li.appendChild(countryOptions);
+      overviewDiv.appendChild(countryOptions);
+      li.appendChild(overviewDiv);
+      if (isBucketlist) {
+        li.appendChild(renderBucketlistDetails(country.alpha3Code));
+      }
       ul.appendChild(li);
-      li.addEventListener('click', () => {
+      overviewDiv.addEventListener('click', () => {
         mapTo(country);
       });
     })
@@ -364,13 +411,13 @@ function renderBucketButton(country, destination, isBucketlist = false) {
     e.stopPropagation();
     if (Bucketlist.find(country.alpha3Code)) {
       Bucketlist.remove(country.alpha3Code);
-      e.srcElement.parentElement.parentElement.className = isBucketlist ? 'deleting' : '';
+      e.srcElement.parentElement.parentElement.parentElement.className = isBucketlist ? 'deleting' : '';
       showModal('Success!', `${country.name} has been removed from your bucketlist.`);
     } else {
       Bucketlist.add(country)
       showModal('Success!', `${country.name} has been added to your bucketlist.`);
     }
-    setTimeout(() => renderResults((isBucketlist ? userBucketlist.map(countries => countries.data) : searchResults), destination, isBucketlist), isBucketlist ? 800 : 0)
+    setTimeout(() => renderResults((isBucketlist ? userBucketlist.map(countries => countries._data) : searchResults), destination, isBucketlist), isBucketlist ? 800 : 0)
   })
   return toBucketlistBtn;
 }
