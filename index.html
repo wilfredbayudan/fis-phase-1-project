@@ -53,12 +53,23 @@
         </div>
 
         <div class="app-heading hidden" id="bucketlist-header">
-          <h2>BUCKETLIST</h2>
+          <h2>BUCKETLIST MANAGER</h2>
           <span>Rate your top picks, write notes and manage your bucketlist.</span>
+          <div id="sort">
+            <span>Sort By</span>
+            <select id="sort-type">
+              <option value="" selected>None</option>
+              <option value="alpha">Alphabetical A-Z</option>
+              <option value="alphaRev">Alphabetical Z-A</option>
+              <option value="ratingLow">Rating (Low to High)</option>
+              <option value="ratingHigh">Rating (High to Low)</option>
+              <option value="newest">Newest Added</option>
+              <option value="oldest">Oldest Added</option>
+            </select>
+          </div>
         </div>
 
         <div class="app-content hidden" id="bucketlist-container">
-          Bucketlist Container
         </div>
         
 

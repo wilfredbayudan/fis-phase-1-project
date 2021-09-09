@@ -59,6 +59,7 @@ const searchType = document.querySelector('#search-type');
 const searchForm = document.querySelector('#search-form');
 const showAll = document.querySelector('#all-btn');
 const resultsContainer = document.querySelector('#results-container');
+const sortSelect = document.querySelector('#sort-type');
 
 let searchResults = [];
 let userBucketlist = [];
@@ -79,7 +80,7 @@ bucketlistLink.addEventListener('click', () => {
   bucketlistContainer.style.display = 'block';
   searchContainer.style.display = 'none';
   resultsContainer.style.display = 'none';
-  renderResults(userBucketlist.map(country => country._data), bucketlistContainer, true)
+  renderResults(userBucketlist, bucketlistContainer, true)
 })
 
 function showPage(pageElem = searchContainer, link = searchLink) {
@@ -163,6 +164,11 @@ searchType.addEventListener('change', () => {
     searchSelect.style.display = 'none';
     searchInput.style.display = 'block';
   }
+})
+
+sortSelect.addEventListener('change', () => {
+  currentFilter = sortSelect.value;
+  renderResults(userBucketlist, bucketlistContainer, true)
 })
 
 // API
@@ -250,12 +256,20 @@ class BucketlistCountry {
     return this._rating;
   }
 
+  get notes() {
+    return this._notes;
+  }
+
+  setNote(newNotes) {
+    this._notes = newNotes.trim();
+  }
+
   setRating(newRating) {
     this._rating = newRating;
   }
-
   
 }
+
 class Bucketlist {
   static find = countryCode => {
     return userBucketlist.find(bucketlistCountry => bucketlistCountry._id === countryCode)
@@ -305,15 +319,15 @@ function renderLoader() {
 
 function killLoader() {
   if (document.querySelectorAll('#loader').length > 0) {
-    setTimeout(() => document.querySelector('#loader').remove(), 300);
+    setTimeout(() => document.querySelector('#loader').remove(), 150);
   }
 }
 
-function renderModal() {
+function renderModal(id) {
   const div = document.createElement('div');
   const h3 = document.createElement('h3');
   const p = document.createElement('p');
-  div.id = 'modal';
+  div.id = id;
   div.appendChild(h3);
   div.appendChild(p);
   body.appendChild(div);
@@ -332,25 +346,42 @@ function showModal(heading = 'Oops!', message = 'Something went wrong.', type = 
   modal.className = 'active';
   modalTimer = setTimeout(() => modal.className = '', 2500)
 }
+
 function renderRating(countryCode) {
   const country = Bucketlist.find(countryCode);
   const maxRating = 5;
   const ratingContainer = document.createElement('div');
-  console.log(country.rating);
   for (let i = 1; i <= maxRating; i++) {
     const star = document.createElement('span');
     star.classList.add('fa','fa-star');
     if (i <= country.rating) {
-      console.log(`${i} is less than or equal to ${country.rating}`)
       star.classList.add('checked');
     }
     star.addEventListener('click', () => {
       country.setRating(i);
-      renderResults(userBucketlist.map(country => country._data), bucketlistContainer, true)
+      renderResults(userBucketlist, bucketlistContainer, true)
     })
     ratingContainer.appendChild(star);
   }
   return ratingContainer;
+}
+
+function renderNoteForm(countryCode) {
+  const bucketlistDetails = Bucketlist.find(countryCode);
+  const form = document.createElement('form');
+  form.className = 'note-form';
+  form.id = `note-${countryCode}`;
+  const input = document.createElement('input');
+  input.setAttribute('type','text');
+  input.value = bucketlistDetails.notes;
+  form.appendChild(input);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    console.log(`Submitted at ${countryCode}`);
+    bucketlistDetails.setNote(input.value);
+    renderResults(userBucketlist, bucketlistContainer, true)
+  })
+  return form;
 }
 
 function renderBucketlistDetails(countryCode) {
@@ -359,46 +390,120 @@ function renderBucketlistDetails(countryCode) {
     const divContainer = document.createElement('div');
     divContainer.className = 'bucketlist-details';
     divContainer.appendChild(renderRating(countryCode));
-  
+    const span = document.createElement('span');
+    span.className = 'added';
+    span.textContent = `Added ${timeAgo(bucketlistDetails._added)}`;
+    const divNotes = document.createElement('div');
+    divNotes.className = 'notes';
+    divNotes.textContent = bucketlistDetails.notes;
+    if (bucketlistDetails.notes === '') {
+      const span = document.createElement('span');
+      span.className = 'faded';
+      span.textContent = 'Add a note';
+      divNotes.appendChild(span);
+    }
+    divNotes.addEventListener('click', () => {
+      divNotes.style.display = 'none';
+      document.querySelector(`#note-${countryCode}`).style.display = 'block';
+      document.querySelector(`#note-${countryCode} input`).focus();
+    })
+    divContainer.appendChild(divNotes);
+    divContainer.appendChild(renderNoteForm(countryCode));
+    divContainer.appendChild(span);
     return divContainer;
   }
 }
-function renderResults(res, destination = resultsContainer, isBucketlist = false) {
-  if (typeof res === 'object') {
-    destination.textContent = '';
-    const ul = document.createElement('ul');
-    res.forEach(country => {
-      const li = document.createElement('li');
-      const overviewDiv = document.createElement('div');
-      overviewDiv.className = 'country-overview';
-      const img = document.createElement('img');
-      img.src = country.flag;
-      img.alt = country.cioc;
-      img.width = 60;
-      overviewDiv.appendChild(img);
-      const infoDiv = document.createElement('div');
-      infoDiv.className = 'country-info';
-      const h4 = document.createElement('h4');
-      h4.textContent = country.name;
-      const p = document.createElement('p');
-      p.textContent = country.region;
-      infoDiv.appendChild(h4);
-      infoDiv.appendChild(p);
-      overviewDiv.appendChild(infoDiv);
-      const countryOptions = document.createElement('div');
-      countryOptions.className = 'country-options';
-      countryOptions.appendChild(renderBucketButton(country, destination, isBucketlist));
-      overviewDiv.appendChild(countryOptions);
-      li.appendChild(overviewDiv);
-      if (isBucketlist) {
-        li.appendChild(renderBucketlistDetails(country.alpha3Code));
-      }
-      ul.appendChild(li);
-      overviewDiv.addEventListener('click', () => {
-        mapTo(country);
-      });
-    })
-    destination.appendChild(ul);
+
+function sortBucketlist(data, method) {
+  switch(method) {
+    case 'alpha':
+      return data.sort((a, b) => {
+        let nameA = a._data.name.toLowerCase();
+        let nameB = b._data.name.toLowerCase();
+        if (nameA < nameB) {
+          return -1;
+        }
+        if (nameA > nameB) {
+          return 1;
+        }
+      })
+
+    case 'alphaRev':
+      return data.sort((a, b) => {
+        let nameA = a._data.name.toLowerCase();
+        let nameB = b._data.name.toLowerCase();
+        if (nameA < nameB) {
+          return 1;
+        }
+        if (nameA > nameB) {
+          return -1;
+        }
+      })
+
+    case 'ratingLow':
+      return data.sort((a, b) => a._rating - b._rating)
+
+    case 'ratingHigh':
+      return data.sort((a, b) => b._rating - a._rating)
+
+    case 'newest':
+      return data.sort((a, b) => b._added - a._added)
+
+    case 'oldest':
+      return data.sort((a, b) => a._added - b._added)
+
+    default:
+      return data;
+  }
+}
+
+function renderResults(data, destination = resultsContainer, isBucketlist = false) {
+  if (typeof data === 'object') {
+    if (data.length === 0) {
+      const span = document.createElement('span');
+      span.className = 'faded-margintop';
+      span.textContent = 'Nothing to see here... Search for countries and add them to your bucketlist to get started!';
+      destination.textContent = '';
+      destination.appendChild(span);
+    } else {
+
+      const res = isBucketlist ? sortBucketlist(data, currentFilter).map(country => country._data) : data;
+      destination.textContent = '';
+      const ul = document.createElement('ul');
+      res.forEach(country => {
+        const li = document.createElement('li');
+        const overviewDiv = document.createElement('div');
+        overviewDiv.className = 'country-overview';
+        const img = document.createElement('img');
+        img.src = country.flag;
+        img.alt = country.cioc;
+        img.width = 60;
+        overviewDiv.appendChild(img);
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'country-info';
+        const h4 = document.createElement('h4');
+        h4.textContent = country.name;
+        const p = document.createElement('p');
+        p.textContent = country.region;
+        infoDiv.appendChild(h4);
+        infoDiv.appendChild(p);
+        overviewDiv.appendChild(infoDiv);
+        const countryOptions = document.createElement('div');
+        countryOptions.className = 'country-options';
+        countryOptions.appendChild(renderBucketButton(country, destination, isBucketlist));
+        overviewDiv.appendChild(countryOptions);
+        li.appendChild(overviewDiv);
+        if (isBucketlist) {
+          li.appendChild(renderBucketlistDetails(country.alpha3Code));
+        }
+        ul.appendChild(li);
+        overviewDiv.addEventListener('click', () => {
+          mapTo(country);
+        });
+      })
+      destination.appendChild(ul);
+
+    }
   }
 }
 
@@ -417,13 +522,84 @@ function renderBucketButton(country, destination, isBucketlist = false) {
       Bucketlist.add(country)
       showModal('Success!', `${country.name} has been added to your bucketlist.`);
     }
-    setTimeout(() => renderResults((isBucketlist ? userBucketlist.map(countries => countries._data) : searchResults), destination, isBucketlist), isBucketlist ? 800 : 0)
+    setTimeout(() => renderResults((isBucketlist ? userBucketlist: searchResults), destination, isBucketlist), isBucketlist ? 500 : 0)
   })
   return toBucketlistBtn;
 }
 
+// Time Ago Function
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+
+function getFormattedDate(date, prefomattedDate = false, hideYear = false) {
+  const day = date.getDate();
+  const month = MONTH_NAMES[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  let minutes = date.getMinutes();
+
+  if (minutes < 10) {
+    // Adding leading zero to minutes
+    minutes = `0${ minutes }`;
+  }
+
+  if (prefomattedDate) {
+    // Today at 10:20
+    // Yesterday at 10:20
+    return `${ prefomattedDate } at ${ hours }:${ minutes }`;
+  }
+
+  if (hideYear) {
+    // 10. January at 10:20
+    return `${ day }. ${ month } at ${ hours }:${ minutes }`;
+  }
+
+  // 10. January 2017. at 10:20
+  return `${ day }. ${ month } ${ year }. at ${ hours }:${ minutes }`;
+}
+
+
+// --- Main function
+function timeAgo(dateParam) {
+  if (!dateParam) {
+    return null;
+  }
+
+  const date = typeof dateParam === 'object' ? dateParam : new Date(dateParam);
+  const DAY_IN_MS = 86400000; // 24 * 60 * 60 * 1000
+  const today = new Date();
+  const yesterday = new Date(today - DAY_IN_MS);
+  const seconds = Math.round((today - date) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const isToday = today.toDateString() === date.toDateString();
+  const isYesterday = yesterday.toDateString() === date.toDateString();
+  const isThisYear = today.getFullYear() === date.getFullYear();
+
+
+  if (seconds < 5) {
+    return 'just now';
+  } else if (seconds < 60) {
+    return `${ seconds } seconds ago`;
+  } else if (seconds < 90) {
+    return 'about a minute ago';
+  } else if (minutes < 60) {
+    return `${ minutes } minutes ago`;
+  } else if (isToday) {
+    return getFormattedDate(date, 'Today'); // Today at 10:20
+  } else if (isYesterday) {
+    return getFormattedDate(date, 'Yesterday'); // Yesterday at 10:20
+  } else if (isThisYear) {
+    return getFormattedDate(date, false, true); // 10. January at 10:20
+  }
+
+  return getFormattedDate(date); // 10. January 2017. at 10:20
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Initial Modal Render
-  renderModal();
+  renderModal('modal');
 
 })
