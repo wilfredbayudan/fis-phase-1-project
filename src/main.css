@@ -271,6 +271,14 @@ button {
 .blue-btn:hover {
   background-color: #69c8f5;
 }
+.grey-btn {
+  background-color: #474747;
+  color: #ffffff;
+}
+.grey-btn:hover {
+  background-color: #69c8f5;
+  color: #000000;
+}
 .green-btn {
   background-color: #61d67b;
 }

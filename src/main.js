@@ -144,7 +144,10 @@ let timerID = null;
 searchInput.addEventListener('keyup', e => {
   if (e.key !== 'Backspace' && searchInput.value) {
     clearTimeout(timerID);
-    timerID = setTimeout(() => fetchResults().then(res => renderResults(res)), 500);
+    timerID = setTimeout(() => fetchResults().then(res => { 
+      renderResults(res);
+      mapTo(res[0]);
+    }), 500);
   }
 })
 
