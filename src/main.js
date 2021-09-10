@@ -140,7 +140,7 @@ searchForm.addEventListener('submit', e => {
         mapTo(res[0]);
       }
     })
-    .catch(err => console.log(err));
+    .catch(err => showModal('Error', err.message));
   searchInput.value = '';
   setTimeout(() => {
     searchInput.focus();
@@ -153,10 +153,12 @@ searchInput.addEventListener('keyup', e => {
   if (searchInput.value.length > 1 && e.key !== 'Backspace') {
     clearTimeout(timerID);
     timerID = setTimeout(() => fetchResults().then(res => { 
-      mapTo(res[0]);
-      renderResults(res);
-      searchInput.focus();
-    }), 500);
+      if (res) {
+        mapTo(res[0]);
+        renderResults(res);
+        searchInput.focus();
+      }
+    }), 600);
   }
 })
 
@@ -164,7 +166,7 @@ searchSelect.addEventListener('change', () => {
   if (searchSelect.value) {
     fetchResults()
       .then(res => renderResults(res))
-      .catch(err => console.log(err));
+      .catch(err => showModal('Error', err.message));
   }
 })
 
@@ -289,14 +291,11 @@ class Bucketlist {
 
   static add = country => {
     if (!this.find(country.alpha3Code)) {
-      console.log(`Adding ${country.alpha3Code} to Bucketlist`);
       const Country = new BucketlistCountry(country.alpha3Code, country);
       userBucketlist.push(Country);
       this.refreshCount();
       renderMarkers(geoJson(userBucketlist));
       return Country;
-    } else {
-      console.log('Already in the bucketlist, oops.')
     }
   }
 
@@ -389,7 +388,6 @@ function renderNoteForm(countryCode) {
   form.appendChild(input);
   form.addEventListener('submit', e => {
     e.preventDefault();
-    console.log(`Submitted at ${countryCode}`);
     bucketlistDetails.setNote(input.value);
     renderResults(userBucketlist, bucketlistContainer, true)
   })
