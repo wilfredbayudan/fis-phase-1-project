@@ -200,7 +200,7 @@ async function fetchResults(showAll = false) {
     }
   }
   if (searchInput.value || showAll === true || searchSelect.value) {
-    const url = `https://restcountries.eu/rest/v2/${showAll === true ? 'all' : searchType.value + '/' + searchValue}`;
+    const url = `https://restcountries.com/v3.1/${showAll === true ? 'all' : searchType.value + '/' + searchValue}`;
 
     renderLoader();
     return fetch(url)
@@ -477,7 +477,7 @@ function renderResults(data, destination = resultsContainer, isBucketlist = fals
       destination.appendChild(span);
     } else {
 
-      const res = isBucketlist ? sortBucketlist(data, currentFilter).map(country => country._data) : data;
+      const res = isBucketlist ? sortBucketlist(data, currentFilter).map(country => country._data) : data.filter(country => !country.name.includes('l'))
       destination.textContent = '';
       const ul = document.createElement('ul');
       res.forEach(country => {
